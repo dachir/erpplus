@@ -1,0 +1,111 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:{YY}COD{MM}{####}",
+ "creation": "2023-11-17 11:14:48.678896",
+ "default_view": "List",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "company",
+  "document",
+  "parent1",
+  "column_break_gqi7k",
+  "date",
+  "distribution",
+  "dimension",
+  "section_break_fqr2o",
+  "details",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "column_break_gqi7k",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Today",
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "label": "Date"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Cost Distribution",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "document",
+   "fieldtype": "Link",
+   "label": "Document",
+   "options": "GL Entry"
+  },
+  {
+   "fieldname": "distribution",
+   "fieldtype": "Link",
+   "label": "Distribution",
+   "options": "Cost Distribution Template"
+  },
+  {
+   "fetch_from": "distribution.parent1",
+   "fieldname": "parent1",
+   "fieldtype": "Data",
+   "label": "Parent",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_fqr2o",
+   "fieldtype": "Section Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "details",
+   "fieldtype": "Table",
+   "options": "Cost Distribution Details"
+  },
+  {
+   "fetch_from": "distribution.dimension",
+   "fieldname": "dimension",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Dimension"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2023-11-17 15:22:53.782613",
+ "modified_by": "Administrator",
+ "module": "Erpplus",
+ "name": "Cost Distribution",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
