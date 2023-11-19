@@ -199,3 +199,9 @@ app_license = "MIT"
 # auth_hooks = [
 #	"erpplus.auth.validate"
 # ]
+
+fixtures = [
+    {"dt": "Custom Field", "filters": [["module", "=", "Erpplus"]]},
+    {"dt": "Client Script", "filters": [["enabled", "=", 1],["module", "=", "Erpplus"]]},
+    {"dt": "Server Script", "filters": [["disabled", "=", 0],["module", "=", "Erpplus"]]},
+]

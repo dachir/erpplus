@@ -1,0 +1,13 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Client Script",
+  "dt": "Item",
+  "enabled": 1,
+  "modified": "2023-11-19 17:35:04.944217",
+  "module": "Erpplus",
+  "name": "Statistics Family Filters",
+  "script": "frappe.ui.form.on('Item', {\n\tsetup(frm) {\n\t\tfrm.set_query(\"statistics_family_1\", function() {\n\t\t\treturn {\n\t\t\t\t\"filters\": {\n\t\t\t\t\t\"level\": \"Level 1\"\n\t\t\t\t}\n\t\t\t};\n\t\t});\n\t\tfrm.set_query(\"statistics_family_2\", function() {\n\t\t\treturn {\n\t\t\t\t\"filters\": {\n\t\t\t\t\t\"level\": \"Level 2\"\n\t\t\t\t}\n\t\t\t};\n\t\t});\n\t}\n\t\n})",
+  "view": "Form"
+ }
+]
