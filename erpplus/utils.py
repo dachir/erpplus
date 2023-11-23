@@ -53,7 +53,7 @@ def get_batch_qty_2(
 				<= CombineDatetime(posting_date, posting_time)
 			)
 
-		out = query.run(as_list=True)
+		out = query.run(as_dict=True)
 
 	elif not batch_no and item_code and warehouse:
 		query = (
@@ -72,6 +72,6 @@ def get_batch_qty_2(
 				<= CombineDatetime(posting_date, posting_time)
 			)
 
-		out = query.run(as_list=True)
+		out = query.run(as_dict=True)
 
 	return out
