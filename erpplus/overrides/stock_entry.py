@@ -1,7 +1,12 @@
 import frappe
 from frappe import _
 
+from erpnext.stock import get_warehouse_account_map
 from erpnext.stock.doctype.stock_entry.stock_entry import StockEntry
+from erpnext.stock.doctype.serial_no.serial_no import (
+	get_serial_nos,
+	update_serial_nos_after_submit,
+)
 
 class CustomStockEntry(StockEntry):
 	def on_submit(self):
