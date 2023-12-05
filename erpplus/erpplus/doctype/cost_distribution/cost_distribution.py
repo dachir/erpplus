@@ -65,19 +65,21 @@ class CostDistribution(Document):
 							)
 
 
-	def create_row(self,r):
-		row = {
-			"account": r.account,
-			#"exchange_rate": ex_rate,
-			#"reference_type": self.doctype,
-			#"reference_name": self.name,
-			"debit_in_account_currency": r.debit_amount,
-			"credit_in_account_currency": r.credit_amount,
-			#"reference_currency": self.devise,
-			#"reference_rate": cours,
-			#"reference_amount": amount,
-		}
-		
+	def create_row(self,r, current_account=None):
+		row = {}
+		if not current_account:
+			row = {
+				"account": r.account,
+				"debit_in_account_currency": r.debit_amount,
+				"credit_in_account_currency": r.credit_amount,
+			}
+		else: 
+			row = {
+				"account": current_account,
+				"debit_in_account_currency": r.credit_amount,
+				"credit_in_account_currency": r.debit_amount,
+			}
+			
 		gle = frappe.get_doc("GL Entry", r.gl_entry)
 		doctype = gle.get("doctype")
 		fieldnames = frappe.get_meta(doctype).get_valid_columns()
@@ -122,11 +124,16 @@ class CostDistribution(Document):
 
 			accounting_entry = self.create_row(d)
 			accounts.append(accounting_entry)
+			
+			current_account = frappe.db.get_value("Branch", d.dimension, "current_account")
+			accounting_entry = self.create_row(d,current_account)
+			accounts.append(accounting_entry)
+
 
 		if flt(payable_amount, precision) != 0 :
-			round_off_account = self.get_account("Company", self.company,"round_off_account")
+			round_off_account = frappe.db.get_value("Company", self.company,"round_off_account")
 			row = {
-				"account": accounting_entry,
+				"account": round_off_account,
 				"debit_in_account_currency": (flt(payable_amount, precision) if flt(payable_amount, precision) < 0 else 0) * -1,
 				"credit_in_account_currency": flt(payable_amount, precision) if flt(payable_amount, precision) >= 0 else 0,
 			}
@@ -150,7 +157,7 @@ class CostDistribution(Document):
 								d: gle.get(d),
 							}
 						)
-				accounts.append(row)
+			accounts.append(row)
 			
 		journal_entry.title = _("Cost Distribution on  {0} for dimension {1}").format(gle.voucher_no, self.dimension)
 		journal_entry.set("accounts", accounts)
