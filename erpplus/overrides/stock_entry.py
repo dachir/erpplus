@@ -115,7 +115,7 @@ class CustomStockEntry(StockEntry):
 
 						self.check_expense_account(item_row)
 
-						expense_account = warehouse_account[warehouse]["account"]
+						expense_account = warehouse_account[sle.warehouse]["account"]
 						
 						s_branch = frappe.db.get_value("Warehouse", item_row.s_warehouse, "branch")
 						t_branch = frappe.db.get_value("Warehouse", item_row.t_warehouse, "branch")
