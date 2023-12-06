@@ -230,10 +230,5 @@ class CustomStockEntry(StockEntry):
 			if self.docstatus == 1:
 				if not gl_entries:
 					gl_entries = self.get_gl_entries_2()
-				make_gl_entries(gl_entries, from_repost=from_repost)
-
-		elif self.doctype in ["Purchase Receipt", "Purchase Invoice"] and self.docstatus == 1:
-			gl_entries = []
-			gl_entries = self.get_asset_gl_entry(gl_entries)
-			#make_gl_entries(gl_entries, from_repost=from_repost)
-			save_entries(gl_entries, False,"Yes", False)
+				#make_gl_entries(gl_entries, from_repost=from_repost)
+				save_entries(gl_entries, False,"Yes", False)
