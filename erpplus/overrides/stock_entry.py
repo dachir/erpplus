@@ -92,11 +92,12 @@ class CustomStockEntry(StockEntry):
 
 						if s_branch == t_branch :
 							if self.add_to_transit:
+								stock_transfert_account = frappe.db.get_value("Branch", s_branch, "stock_transfert_account")
 								gl_list.append(
 									self.get_gl_dict(
 										{
 											"account": warehouse_account[sle.warehouse]["account"],
-											"against": expense_account,
+											"against": stock_transfert_account,
 											"cost_center": item_row.cost_center,
 											"project": item_row.project or self.get("project"),
 											"remarks": self.get("remarks") or _("Accounting Entry for Stock"),
@@ -111,7 +112,7 @@ class CustomStockEntry(StockEntry):
 								gl_list.append(
 									self.get_gl_dict(
 										{
-											"account": expense_account,
+											"account": stock_transfert_account,
 											"against": warehouse_account[sle.warehouse]["account"],
 											"cost_center": item_row.cost_center,
 											"remarks": self.get("remarks") or _("Accounting Entry for Stock"),
@@ -123,11 +124,12 @@ class CustomStockEntry(StockEntry):
 									)
 								)
 						else:
+							stock_transfert_account = frappe.db.get_value("Branch", t_branch, "stock_transfert_account")
 							gl_list.append(
 									self.get_gl_dict(
 										{
 											"account": warehouse_account[sle.warehouse]["account"],
-											"against": expense_account,
+											"against": stock_transfert_account,
 											"cost_center": item_row.cost_center,
 											"project": item_row.project or self.get("project"),
 											"remarks": self.get("remarks") or _("Accounting Entry for Stock"),
@@ -142,7 +144,7 @@ class CustomStockEntry(StockEntry):
 							gl_list.append(
 								self.get_gl_dict(
 									{
-										"account": expense_account,
+										"account": stock_transfert_account,
 										"against": warehouse_account[sle.warehouse]["account"],
 										"cost_center": item_row.cost_center,
 										"remarks": self.get("remarks") or _("Accounting Entry for Stock"),
