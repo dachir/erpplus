@@ -115,12 +115,7 @@ class CustomStockEntry(StockEntry):
 
 						self.check_expense_account(item_row)
 
-						# expense account/ target_warehouse / source_warehouse
-						if item_row.get("target_warehouse"):
-							warehouse = item_row.get("target_warehouse")
-							expense_account = warehouse_account[warehouse]["account"]
-						else:
-							expense_account = item_row.expense_account
+						expense_account = warehouse_account[warehouse]["account"]
 						
 						s_branch = frappe.db.get_value("Warehouse", item_row.s_warehouse, "branch")
 						t_branch = frappe.db.get_value("Warehouse", item_row.t_warehouse, "branch")
@@ -131,7 +126,7 @@ class CustomStockEntry(StockEntry):
 								gl_list.append(
 									self.get_gl_dict(
 										{
-											"account": warehouse_account[sle.warehouse]["account"],
+											"account": expense_account,
 											"against": stock_transfert_account,
 											"cost_center": item_row.cost_center,
 											"project": item_row.project or self.get("project"),
@@ -147,8 +142,8 @@ class CustomStockEntry(StockEntry):
 								gl_list.append(
 									self.get_gl_dict(
 										{
-											"account": stock_transfert_account,
-											"against": warehouse_account[sle.warehouse]["account"],
+											"account": expense_account,
+											"against": stock_transfert_account,
 											"cost_center": item_row.cost_center,
 											"remarks": self.get("remarks") or _("Accounting Entry for Stock"),
 											"debit":  flt(sle.stock_value_difference, precision),
@@ -163,7 +158,7 @@ class CustomStockEntry(StockEntry):
 							gl_list.append(
 									self.get_gl_dict(
 										{
-											"account": warehouse_account[sle.warehouse]["account"],
+											"account": expense_account,
 											"against": stock_transfert_account,
 											"cost_center": item_row.cost_center,
 											"project": item_row.project or self.get("project"),
@@ -180,7 +175,7 @@ class CustomStockEntry(StockEntry):
 								self.get_gl_dict(
 									{
 										"account": stock_transfert_account,
-										"against": warehouse_account[sle.warehouse]["account"],
+										"against": expense_account,
 										"cost_center": item_row.cost_center,
 										"remarks": self.get("remarks") or _("Accounting Entry for Stock"),
 										"credit":  flt(sle.stock_value_difference, precision),
@@ -264,14 +259,16 @@ class CustomStockEntry(StockEntry):
 			if self.docstatus == 1:
 				if not gl_entries:
 					gl_entries = self.get_gl_entries_2()
-				#make_gl_entries(gl_entries, from_repost=from_repost)
-				#save_entries(gl_entries, False,"Yes", False)
+					
 				frappe.msgprint(str(gl_entries))
-				for arg in gl_entries:
+				make_gl_entries(gl_entries, from_repost=from_repost)
+				#save_entries(gl_entries, False,"Yes", False)
+				#frappe.msgprint(str(gl_entries))
+				#for arg in gl_entries:
 					#gle = frappe.new_doc("GL Entry", arg)
 					#gle.update(arg)
-					arg.update({"doctype": "GL Entry"})
-					doc = frappe.get_doc(arg)
-					frappe.msgprint(doc.account)
-					doc.flags.ignore_permissions = 1
-					doc.submit()
+					#arg.update({"doctype": "GL Entry"})
+					#doc = frappe.get_doc(arg)
+					#frappe.msgprint(doc.account)
+					#doc.flags.ignore_permissions = 1
+					#doc.submit()
