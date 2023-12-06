@@ -229,6 +229,7 @@ class CustomStockEntry(StockEntry):
 			if self.docstatus == 1:
 				if not gl_entries:
 					gl_entries = self.get_gl_entries_2()
+					frappe.msgprint(str(gl_entries))
 				make_gl_entries(gl_entries, from_repost=from_repost)
 
 		elif self.doctype in ["Purchase Receipt", "Purchase Invoice"] and self.docstatus == 1:
