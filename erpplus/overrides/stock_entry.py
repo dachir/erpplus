@@ -28,6 +28,39 @@ from erpnext.accounts.general_ledger import (
 )
 
 class CustomStockEntry(StockEntry):
+	def on_cancel(self):
+		self.cancel_journal()
+		self.update_subcontract_order_supplied_items()
+		self.update_subcontracting_order_status()
+
+		if self.work_order and self.purpose == "Material Consumption for Manufacture":
+			self.validate_work_order_status()
+
+		self.update_work_order()
+		self.update_stock_ledger()
+
+		self.ignore_linked_doctypes = ("GL Entry", "Stock Ledger Entry", "Repost Item Valuation")
+
+		self.make_gl_entries_on_cancel()
+		self.repost_future_sle_and_gle()
+		self.update_cost_in_project()
+		self.update_transferred_qty()
+		self.update_quality_inspection()
+		self.delete_auto_created_batches()
+		self.delete_linked_stock_entry()
+
+		if self.purpose == "Material Transfer" and self.add_to_transit:
+			self.set_material_request_transfer_status("Not Started")
+		if self.purpose == "Material Transfer" and self.outgoing_stock_entry:
+			self.set_material_request_transfer_status("In Transit")
+
+
+	def cancel_journal(self):
+		nb = frappe.db.count("Journal Entry",  {"cheque_no" : self.name})
+		if nb > 0:
+			jv = frappe.get_doc("Journal Entry", {"cheque_no" : self.name})
+			jv.cancel()
+
 	def on_submit(self):
 		self.update_stock_ledger()
 
