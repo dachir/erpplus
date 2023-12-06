@@ -89,10 +89,66 @@ class CustomStockEntry(StockEntry):
 			self.set_material_request_transfer_status("Completed")
 
 		if self.purpose == "Material Transfer":
-			#self.make_stock_branch_tranfert_jv_entry()
-			self.make_gl_entries_2()
+			self.make_stock_branch_tranfert_jv_entry()
+			#self.make_gl_entries_2()
 
 
+	def make_stock_branch_tranfert_jv_entry(self):
+		journal_entry = frappe.new_doc("Journal Entry")
+		journal_entry.voucher_type = "Journal Entry"
+		journal_entry.user_remark = _("Stock Transfert {0} ").format(self.name) 
+		journal_entry.company = self.company 
+		journal_entry.posting_date = self.posting_date
+		journal_entry.cheque_no = self.name
+		journal_entry.cheque_date = self.posting_date
+		accounts = []
+		row = {}
+		warehouses = get_warehouse_account_map(self.company)
+
+		for d in self.items:
+			s_branch = frappe.db.get_value("Warehouse", d.s_warehouse, "branch")
+			t_branch = frappe.db.get_value("Warehouse", d.t_warehouse, "branch")
+			if s_branch == t_branch :
+				if self.add_to_transit:
+					row = {
+						"account": warehouses[d.s_warehouse].account,
+						"debit_in_account_currency": 0,
+						"credit_in_account_currency": d.amount,
+						"branch": s_branch,
+					}
+					accounts.append(row)
+					stock_transfert_account = frappe.db.get_value("Branch", s_branch, "stock_transfert_account")
+					row = {
+						"account": stock_transfert_account,
+						"debit_in_account_currency": d.amount,
+						"credit_in_account_currency": 0,
+						"branch": s_branch,
+					}
+					accounts.append(row)
+			else:
+				row = {
+					"account": warehouses[d.t_warehouse].account,
+					"debit_in_account_currency": d.amount,
+					"credit_in_account_currency": 0,
+					"branch": t_branch,
+				}
+				accounts.append(row)
+				stock_transfert_account = frappe.db.get_value("Branch", t_branch, "stock_transfert_account")
+				row = {
+					"account": stock_transfert_account,
+					"debit_in_account_currency": 0,
+					"credit_in_account_currency": d.amount,
+					"branch": t_branch,
+				}
+				accounts.append(row)
+				
+		if row :	
+			journal_entry.title = _("Stock Transfert {0} ").format(self.name) 
+			journal_entry.set("accounts", accounts)
+			journal_entry.submit()
+
+
+"""
 	def get_gl_entries_2(self):
 
 		warehouse_account = get_warehouse_account_map(self.company)
@@ -274,3 +330,4 @@ class CustomStockEntry(StockEntry):
 					#frappe.msgprint(doc.account)
 					#doc.flags.ignore_permissions = 1
 					#doc.submit()
+"""
