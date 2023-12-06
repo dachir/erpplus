@@ -260,7 +260,7 @@ class CustomStockEntry(StockEntry):
 				if not gl_entries:
 					gl_entries = self.get_gl_entries_2()
 					
-				frappe.msgprint(str(gl_entries))
+				frappe.throw(str(gl_entries))
 				make_gl_entries(gl_entries, from_repost=from_repost)
 				#save_entries(gl_entries, False,"Yes", False)
 				#frappe.msgprint(str(gl_entries))
