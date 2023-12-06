@@ -267,7 +267,9 @@ class CustomStockEntry(StockEntry):
 				#make_gl_entries(gl_entries, from_repost=from_repost)
 				#save_entries(gl_entries, False,"Yes", False)
 				for arg in gl_entries:
-					gle = frappe.new_doc("GL Entry")
-					gle.update(arg)
-					gle.flags.ignore_permissions = 1
-					gle.submit()
+					#gle = frappe.new_doc("GL Entry", arg)
+					#gle.update(arg)
+					arg.update({"doctype": "GL Entry"})
+					doc = frappe.get_doc(arg)
+					doc.flags.ignore_permissions = 1
+					doc.submit()
