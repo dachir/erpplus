@@ -89,10 +89,10 @@ class CustomStockEntry(StockEntry):
 			self.set_material_request_transfer_status("Completed")
 
 		if self.purpose == "Material Transfer":
-			self.make_stock_branch_tranfert_jv_entry()
-			#self.make_gl_entries_2()
+			#self.make_stock_branch_tranfert_jv_entry()
+			self.make_gl_entries_2()
 
-
+"""
 	def make_stock_branch_tranfert_jv_entry(self):
 		journal_entry = frappe.new_doc("Journal Entry")
 		journal_entry.voucher_type = "Journal Entry"
@@ -320,5 +320,9 @@ class CustomStockEntry(StockEntry):
 				if not gl_entries:
 					gl_entries = self.get_gl_entries_2()
 				#make_gl_entries(gl_entries, from_repost=from_repost)
-				save_entries(gl_entries, False,"Yes", False)
-"""
+				#save_entries(gl_entries, False,"Yes", False)
+				for arg in gl_entries:
+					gle = frappe.new_doc("GL Entry")
+					gle.update(arg)
+					gle.flags.ignore_permissions = 1
+					gle.submit()
