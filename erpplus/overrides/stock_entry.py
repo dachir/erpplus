@@ -126,8 +126,8 @@ class CustomStockEntry(StockEntry):
 								gl_list.append(
 									self.get_gl_dict(
 										{
-											"account": expense_account,
-											"against": stock_transfert_account,
+											"account": stock_transfert_account,
+											"against": expense_account,
 											"cost_center": item_row.cost_center,
 											"project": item_row.project or self.get("project"),
 											"remarks": self.get("remarks") or _("Accounting Entry for Stock"),
