@@ -141,8 +141,7 @@ class CustomStockEntry(StockEntry):
 					"branch": t_branch,
 				}
 				accounts.append(row)
-
-		frappe.throw(str(row))	
+	
 		if row :	
 			journal_entry.title = _("Stock Transfert {0} ").format(self.name) 
 			journal_entry.set("accounts", accounts)
