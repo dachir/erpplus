@@ -118,6 +118,7 @@ class CostDistribution(Document):
 		payable_amount = 0
 		row = {}
 
+		current_account = frappe.db.get_value("Branch", self.details[0].dimension, "current_account")
 		for d in self.details:
 			amount = flt(d.debit_amount - d.credit_amount, precision)
 			payable_amount += amount
@@ -125,7 +126,6 @@ class CostDistribution(Document):
 			accounting_entry = self.create_row(d)
 			accounts.append(accounting_entry)
 			
-			current_account = frappe.db.get_value("Branch", d.dimension, "current_account")
 			accounting_entry = self.create_row(d,current_account)
 			accounts.append(accounting_entry)
 
