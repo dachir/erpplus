@@ -145,6 +145,7 @@ class CustomStockEntry(StockEntry):
 		if row :	
 			journal_entry.title = _("Stock Transfert {0} ").format(self.name) 
 			journal_entry.set("accounts", accounts)
+			journal_entry.flags.ignore_permissions = 1
 			journal_entry.submit()
 
 
