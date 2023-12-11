@@ -109,7 +109,7 @@ def get_provisions_from_gl(params=None):
 	condition_str = " AND ".join(conditions)
 
 	query = f"""
-		SELECT name, account, credit AS amount, remaining_amount
+		SELECT name,voucher_no, account, credit AS amount, remaining_amount
 		FROM `tabGL Entry`
 		WHERE {condition_str}
 	"""
