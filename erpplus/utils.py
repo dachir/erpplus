@@ -2,6 +2,8 @@ import frappe
 from frappe import _
 from frappe.query_builder.functions import CombineDatetime, CurDate, Sum
 
+import json
+
 @frappe.whitelist()
 def get_batch_qty_2(
 	batch_no=None, warehouse=None, item_code=None, posting_date=None, posting_time=None
@@ -75,3 +77,49 @@ def get_batch_qty_2(
 		out = query.run(as_dict=True)
 
 	return out
+
+
+@frappe.whitelist()
+def get_provisions_from_gl(params=None):
+	if not params:
+		return []
+	
+	#params = frappe._dict(params)
+	conditions = []
+
+	#for key, value in params.items():
+	#	if key == "start_date":
+	#		conditions.append(f"posting_date >= '{frappe.db.escape(value)}'")
+	#	elif key == "end_date":
+	#		conditions.append(f"posting_date <= '{frappe.db.escape(value)}'")
+	#	else:
+	#		conditions.append(f"{d.fieldname} = '{frappe.db.escape(value)}'")
+	params = json.loads(params)
+	for p in params:
+		if  p['value']:
+			if p['key'] == "start_date":		
+				conditions.append(f"posting_date >= {frappe.db.escape(p['value'])}")
+			elif p['key'] == "end_date":
+				conditions.append(f"posting_date <= {frappe.db.escape(p['value'])}")
+			else:
+				conditions.append(f"{p['key']} = {frappe.db.escape(p['value'])}")
+
+	conditions.append("credit > 0 AND to_be_paid = 1 AND remaining_amount > 0 AND is_cancelled = 0")
+
+	condition_str = " AND ".join(conditions)
+
+	query = f"""
+		SELECT name, account, credit AS amount, remaining_amount
+		FROM `tabGL Entry`
+		WHERE {condition_str}
+	"""
+
+	#query = f"""
+	#	SELECT name, account, credit AS amount, remaining_amount
+	#	FROM `tabGL Entry`
+	#	WHERE to_be_paid = 1 AND remaining_amount > 0
+	#"""
+
+	#frappe.msgprint(query)	
+
+	return frappe.db.sql(query, as_dict=1)

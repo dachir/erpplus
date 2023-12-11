@@ -95,7 +95,9 @@ app_license = "MIT"
 # Override standard doctype classes
 
 override_doctype_class = {
-    "Stock Entry": "erpplus.overrides.stock_entry.CustomStockEntry"
+    "Stock Entry": "erpplus.overrides.stock_entry.CustomStockEntry",
+    "Purchase Invoice": "erpplus.overrides.purchase_invoice.CustomPurchaseInvoice",
+    "GL Entry": "erpplus.overrides.gl_entry.CustomGLEntry",
 }
 
 # Document Events

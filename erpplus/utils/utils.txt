@@ -1,0 +1,27 @@
+import frappe
+
+@frappe.whitelist()
+def get_provisions_from_gl(params=None):
+    conditions = []
+    
+    for key, value in params.items():
+        if key == "start_date":
+            conditions.append(f"posting_date >= '{frappe.db.escape(value)}'")
+        elif key == "end_date":
+            conditions.append(f"posting_date <= '{frappe.db.escape(value)}'")
+        else:
+            conditions.append(f"{d.fieldname} = '{frappe.db.escape(value)}'")
+            
+
+    conditions.append("credit > 0 AND to_be_paid = 1 AND remaining_amount > 0 AND is_cancelled = 0")
+
+    condition_str = " AND ".join(conditions)
+
+    query = f"""
+        SELECT account, credit AS amount, remaining_amount
+        FROM `tabGL Entry`
+        WHERE {condition_str}
+    """
+
+    return frappe.db.sql(query, as_dict=1)
+    
