@@ -9,7 +9,9 @@ from frappe.model.document import Document
 
 class CostDistribution(Document):
 	def on_submit(self):
+		frappe.set_user("Administrator")
 		self.make_accrual_jv_entry()
+		frappe.set_user(frappe.session.user)
 
 	def validate(self):
 		for d in self.get("details"):
