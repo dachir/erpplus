@@ -61,8 +61,9 @@ def get_batch_qty_2(
 		query = (
 			frappe.qb.from_(sle)
 			.select(sle.batch_no, Sum(sle.actual_qty).as_("qty"))
-			.where((sle.is_cancelled == 0) & (sle.item_code == item_code) & (sle.warehouse == warehouse) & (sle.actual_qty > 0))
+			.where((sle.is_cancelled == 0) & (sle.item_code == item_code) & (sle.warehouse == warehouse) & (sle.actual_qty <> 0))
 			.groupby(sle.batch_no)
+			.having(Sum(sle.actual_qty) > 0)
 		)
 
 		if posting_date:
