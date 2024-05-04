@@ -428,7 +428,7 @@ class StockBalanceReport(object):
 					"width": 80,
 					"convertible": "qty",
 				},
-				{"label": _("Out Value"), "fieldname": "out_val", "fieldtype": "Float", "width": 80},
+				{"label": _("Out Value"), "fieldname": "out_val", "fieldtype": "Float", "width": 80, "hidden" : 1,},
 				{
 					"label": _("Valuation Rate"),
 					"fieldname": "val_rate",
