@@ -94,7 +94,85 @@ class CustomStockEntry(StockEntry):
 			self.make_stock_branch_tranfert_jv_entry()
 			#self.make_gl_entries_2()
 
+	def make_stock_branch_tranfert_jv_entry(self):
+		gl_entries = []
+		posting_date = self.posting_date
+		remarks = _("Stock Transfer {0}").format(self.name)
+		company = self.company
 
+		for d in self.items:
+			# Get source and target branch for warehouses
+			s_branch = frappe.db.get_value("Warehouse", d.s_warehouse, "branch")
+			t_branch = frappe.db.get_value("Warehouse", d.t_warehouse, "branch")
+
+			if s_branch == t_branch:
+				if self.add_to_transit:
+					# Fetch credit account and append GL entries
+					credit_account = frappe.db.get_value("Branch", s_branch, "stock_transfert_account")
+					credit_account_currency = frappe.db.get_value("Account", credit_account, "account_currency")
+					credit_exchange_rate = get_exchange_rate(self.currency, credit_account_currency)
+
+					# Fetch debit account and append GL entries
+					debit_account = frappe.db.get_value("Branch", s_branch, "stock_transfert_account")
+					debit_account_currency = frappe.db.get_value("Account", debit_account, "account_currency")
+					debit_exchange_rate = get_exchange_rate(self.currency, debit_account_currency)
+
+					self.append_gl_entry(
+						gl_entries, credit_account, 0, d.amount, d.cost_center,
+						credit_exchange_rate, s_branch, credit_account_currency, remarks, debit_account
+					)
+
+					
+					self.append_gl_entry(
+						gl_entries, debit_account, d.amount, 0, d.cost_center,
+						debit_exchange_rate, s_branch, debit_account_currency, remarks, credit_account
+					)
+
+				else:
+					# Append GL entries for direct transfer
+					debit_account = frappe.db.get_value("Branch", t_branch, "stock_transfert_account")
+					debit_account_currency = frappe.db.get_value("Account", debit_account, "account_currency")
+					debit_exchange_rate = get_exchange_rate(self.currency, debit_account_currency)
+
+					credit_account = frappe.db.get_value("Branch", s_branch, "stock_transfert_account")
+					credit_account_currency = frappe.db.get_value("Account", credit_account, "account_currency")
+					credit_exchange_rate = get_exchange_rate(self.currency, credit_account_currency)
+
+					self.append_gl_entry(
+						gl_entries, debit_account, d.amount, 0, d.cost_center,
+						debit_exchange_rate, t_branch, debit_account_currency, remarks, credit_account
+					)
+
+					
+					self.append_gl_entry(
+						gl_entries, credit_account, 0, d.amount, d.cost_center,
+						credit_exchange_rate, s_branch, credit_account_currency, remarks, debit_account
+					)
+
+	def append_gl_entry(self, gl_entries, account, debit_amount, credit_amount, cost_center, ex_rate, branch, currency, remarks, against_account=None):
+		arg = frappe._dict({
+			"posting_date": self.posting_date,
+			"account": account,
+			"debit": flt(debit_amount, 2),
+			"credit": flt(credit_amount, 2),
+			"exchange_rate": ex_rate,
+			"branch": branch,
+			"currency": currency,
+			"remarks": remarks,
+			"cost_center": cost_center,
+			"voucher_type": self.doctype,
+			"voucher_no": self.name,
+			"company": self.company
+		})
+
+		if against_account:
+			arg.update({"against": against_account})
+
+		gl_entries.append(arg)
+
+
+	
+	"""
 	def make_stock_branch_tranfert_jv_entry(self):
 		journal_entry = frappe.new_doc("Journal Entry")
 		journal_entry.voucher_type = "Journal Entry"
@@ -149,7 +227,7 @@ class CustomStockEntry(StockEntry):
 			journal_entry.set("accounts", accounts)
 			journal_entry.flags.ignore_permissions = 1
 			journal_entry.submit()
-
+	"""
 
 
 
@@ -209,186 +287,4 @@ class CustomStockEntry(StockEntry):
 			journal_entry.submit()
 
 
-"""
-	def get_gl_entries_2(self):
 
-		warehouse_account = get_warehouse_account_map(self.company)
-
-		sle_map = self.get_stock_ledger_details()
-		#voucher_details = self.get_voucher_details(default_expense_account, default_cost_center, sle_map)
-
-		gl_list = []
-		warehouse_with_no_account = []
-		precision = self.get_debit_field_precision()
-		for item_row in self.items:
-			sle_list = sle_map.get(item_row.name)
-			sle_rounding_diff = 0.0
-			if sle_list:
-				for sle in sle_list:
-					if warehouse_account.get(sle.warehouse):
-						# from warehouse account
-
-						sle_rounding_diff += flt(sle.stock_value_difference)
-
-						self.check_expense_account(item_row)
-
-						expense_account = warehouse_account[sle.warehouse]["account"]
-						
-						s_branch = frappe.db.get_value("Warehouse", item_row.s_warehouse, "branch")
-						t_branch = frappe.db.get_value("Warehouse", item_row.t_warehouse, "branch")
-
-						if s_branch == t_branch :
-							if self.add_to_transit:
-								stock_transfert_account = frappe.db.get_value("Branch", s_branch, "stock_transfert_account")
-								gl_list.append(
-									self.get_gl_dict(
-										{
-											"account": stock_transfert_account,
-											"against": expense_account,
-											"cost_center": item_row.cost_center,
-											"project": item_row.project or self.get("project"),
-											"remarks": self.get("remarks") or _("Accounting Entry for Stock Sending"),
-											"credit": flt(sle.stock_value_difference, precision),
-											"is_opening": item_row.get("is_opening") or self.get("is_opening") or "No",
-										},
-										warehouse_account[sle.warehouse]["account_currency"],
-										item=item_row,
-									)
-								)
-
-								gl_list.append(
-									self.get_gl_dict(
-										{
-											"account": expense_account,
-											"against": stock_transfert_account,
-											"cost_center": item_row.cost_center,
-											"remarks": self.get("remarks") or _("Accounting Entry for Stock Sending"),
-											"debit":  flt(sle.stock_value_difference, precision),
-											"project": item_row.get("project") or self.get("project"),
-											"is_opening": item_row.get("is_opening") or self.get("is_opening") or "No",
-										},
-										item=item_row,
-									)
-								)
-						else:
-							stock_transfert_account = frappe.db.get_value("Branch", t_branch, "stock_transfert_account")
-							gl_list.append(
-									self.get_gl_dict(
-										{
-											"account": expense_account,
-											"against": stock_transfert_account,
-											"cost_center": item_row.cost_center,
-											"project": item_row.project or self.get("project"),
-											"remarks": self.get("remarks") or _("Accounting Entry for Stock Reception"),
-											"debit": flt(sle.stock_value_difference, precision),
-											"is_opening": item_row.get("is_opening") or self.get("is_opening") or "No",
-										},
-										warehouse_account[sle.warehouse]["account_currency"],
-										item=item_row,
-									)
-								)
-
-							gl_list.append(
-								self.get_gl_dict(
-									{
-										"account": stock_transfert_account,
-										"against": expense_account,
-										"cost_center": item_row.cost_center,
-										"remarks": self.get("remarks") or _("Accounting Entry for Stock Reception"),
-										"credit":  flt(sle.stock_value_difference, precision),
-										"project": item_row.get("project") or self.get("project"),
-										"is_opening": item_row.get("is_opening") or self.get("is_opening") or "No",
-									},
-									item=item_row,
-								)
-							)
-
-					elif sle.warehouse not in warehouse_with_no_account:
-						warehouse_with_no_account.append(sle.warehouse)
-
-			if abs(sle_rounding_diff) > (1.0 / (10**precision)) and self.is_internal_transfer():
-				warehouse_asset_account = ""
-				if self.get("is_internal_customer"):
-					warehouse_asset_account = warehouse_account[item_row.get("target_warehouse")]["account"]
-				elif self.get("is_internal_supplier"):
-					warehouse_asset_account = warehouse_account[item_row.get("warehouse")]["account"]
-
-				expense_account = frappe.get_cached_value("Company", self.company, "default_expense_account")
-
-				gl_list.append(
-					self.get_gl_dict(
-						{
-							"account": expense_account,
-							"against": warehouse_asset_account,
-							"cost_center": item_row.cost_center,
-							"project": item_row.project or self.get("project"),
-							"remarks": _("Rounding gain/loss Entry for Stock Transfer"),
-							"debit": sle_rounding_diff,
-							"is_opening": item_row.get("is_opening") or self.get("is_opening") or "No",
-						},
-						warehouse_account[sle.warehouse]["account_currency"],
-						item=item_row,
-					)
-				)
-
-				gl_list.append(
-					self.get_gl_dict(
-						{
-							"account": warehouse_asset_account,
-							"against": expense_account,
-							"cost_center": item_row.cost_center,
-							"remarks": _("Rounding gain/loss Entry for Stock Transfer"),
-							"credit": sle_rounding_diff,
-							"project": item_row.get("project") or self.get("project"),
-							"is_opening": item_row.get("is_opening") or self.get("is_opening") or "No",
-						},
-						item=item_row,
-					)
-				)
-
-		if warehouse_with_no_account:
-			for wh in warehouse_with_no_account:
-				if frappe.get_cached_value("Warehouse", wh, "company"):
-					frappe.throw(
-						_(
-							"Warehouse {0} is not linked to any account, please mention the account in the warehouse record or set default inventory account in company {1}."
-						).format(wh, self.company)
-					)
-
-		frappe.msgprint(str(gl_list))
-
-		return process_gl_map(gl_list, precision=precision)
-
-	def make_gl_entries_2(self, gl_entries=None, from_repost=False):
-		if self.docstatus == 2:
-			make_reverse_gl_entries(voucher_type=self.doctype, voucher_no=self.name)
-
-		provisional_accounting_for_non_stock_items = cint(
-			frappe.get_cached_value(
-				"Company", self.company, "enable_provisional_accounting_for_non_stock_items"
-			)
-		)
-
-		if (
-			cint(erpnext.is_perpetual_inventory_enabled(self.company))
-			or provisional_accounting_for_non_stock_items
-		):
-			warehouse_account = get_warehouse_account_map(self.company)
-
-			if self.docstatus == 1:
-				if not gl_entries:
-					gl_entries = self.get_gl_entries_2()
-					
-				#frappe.throw(str(gl_entries))
-				make_gl_entries(gl_entries, from_repost=from_repost)
-				#save_entries(gl_entries, False,"Yes", False)
-				#frappe.msgprint(str(gl_entries))
-				#for arg in gl_entries:
-					#gle = frappe.new_doc("GL Entry", arg)
-					#gle.update(arg)
-					#arg.update({"doctype": "GL Entry"})
-					#doc = frappe.get_doc(arg)
-					#frappe.msgprint(doc.account)
-					#doc.flags.ignore_permissions = 1
-					#doc.submit()
-"""
