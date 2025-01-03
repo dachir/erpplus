@@ -100,6 +100,7 @@ class CustomStockEntry(StockEntry):
 		posting_date = self.posting_date
 		remarks = _("Stock Transfer {0}").format(self.name)
 		company = self.company
+		currency=erpnext.get_company_currency(self.company)
 
 		for d in self.items:
 			# Get source and target branch for warehouses
@@ -111,12 +112,12 @@ class CustomStockEntry(StockEntry):
 					# Fetch credit account and append GL entries
 					credit_account = frappe.db.get_value("Branch", s_branch, "stock_transfert_account")
 					credit_account_currency = frappe.db.get_value("Account", credit_account, "account_currency")
-					credit_exchange_rate = get_exchange_rate(self.currency, credit_account_currency)
+					credit_exchange_rate = get_exchange_rate(currency, credit_account_currency)
 
 					# Fetch debit account and append GL entries
 					debit_account = frappe.db.get_value("Branch", s_branch, "stock_transfert_account")
 					debit_account_currency = frappe.db.get_value("Account", debit_account, "account_currency")
-					debit_exchange_rate = get_exchange_rate(self.currency, debit_account_currency)
+					debit_exchange_rate = get_exchange_rate(currency, debit_account_currency)
 
 					self.append_gl_entry(
 						gl_entries, credit_account, 0, d.amount, d.cost_center,
@@ -133,11 +134,11 @@ class CustomStockEntry(StockEntry):
 					# Append GL entries for direct transfer
 					debit_account = frappe.db.get_value("Branch", t_branch, "stock_transfert_account")
 					debit_account_currency = frappe.db.get_value("Account", debit_account, "account_currency")
-					debit_exchange_rate = get_exchange_rate(self.currency, debit_account_currency)
+					debit_exchange_rate = get_exchange_rate(currency, debit_account_currency)
 
 					credit_account = frappe.db.get_value("Branch", s_branch, "stock_transfert_account")
 					credit_account_currency = frappe.db.get_value("Account", credit_account, "account_currency")
-					credit_exchange_rate = get_exchange_rate(self.currency, credit_account_currency)
+					credit_exchange_rate = get_exchange_rate(currency, credit_account_currency)
 
 					self.append_gl_entry(
 						gl_entries, debit_account, d.amount, 0, d.cost_center,
