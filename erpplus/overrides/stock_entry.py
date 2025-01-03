@@ -19,6 +19,7 @@ from erpnext.stock.doctype.stock_entry.stock_entry import StockEntry
 #	get_serial_nos,
 #	update_serial_nos_after_submit,
 #)
+from erpnext.setup.utils import get_exchange_rate
 from erpnext.accounts.general_ledger import process_gl_map
 from erpnext.accounts.general_ledger import (
 	make_gl_entries,
