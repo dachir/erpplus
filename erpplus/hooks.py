@@ -95,7 +95,7 @@ app_license = "MIT"
 # Override standard doctype classes
 
 override_doctype_class = {
-    "Stock Entry": "erpplus.overrides.stock_entry.CustomStockEntry",
+    #"Stock Entry": "erpplus.overrides.stock_entry.CustomStockEntry",
     "Purchase Invoice": "erpplus.overrides.purchase_invoice.CustomPurchaseInvoice",
     "GL Entry": "erpplus.overrides.gl_entry.CustomGLEntry",
 }
@@ -104,13 +104,17 @@ override_doctype_class = {
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
+doc_events = {
+    "Stock Entry":{
+        "on_submit": "erpplus.overrides.stock_entry.on_submit_function",
+        "before_cancel": "erpplus.overrides.stock_entry.on_cancel_function"
+    }
 #	"*": {
 #		"on_update": "method",
 #		"on_cancel": "method",
 #		"on_trash": "method"
 #	}
-# }
+}
 
 # Scheduled Tasks
 # ---------------
