@@ -106,7 +106,7 @@ override_doctype_class = {
 
 doc_events = {
     "Stock Entry":{
-        "on_submit": "erpplus.overrides.stock_entry.on_submit_function",
+        #"on_submit": "erpplus.overrides.stock_entry.on_submit_function",
         "before_cancel": "erpplus.overrides.stock_entry.on_cancel_function"
     }
 #	"*": {
