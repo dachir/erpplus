@@ -31,7 +31,7 @@ from erpnext.accounts.general_ledger import (
 class CustomStockEntry(StockEntry):
 	pass
 
-def on_cancel_function(doc):
+def on_cancel_function(doc,method):
 	doc.cancel_journal()
 	#super().on_cancel()
 
@@ -41,10 +41,10 @@ def cancel_journal(doc):
 		jv = frappe.get_doc("Journal Entry", {"cheque_no" : doc.name})
 		jv.cancel()
 
-def on_submit_function(doc):
+def on_submit_function(doc,method):
 	#super().on_submit()
 	if doc.purpose == "Material Transfer":
-		doc.make_stock_branch_tranfert_jv_entry()
+		make_stock_branch_tranfert_jv_entry(doc)
 
 def make_stock_branch_tranfert_jv_entry(doc):
 	gl_entries = []
@@ -91,13 +91,13 @@ def make_stock_branch_tranfert_jv_entry(doc):
 				credit_account_currency = frappe.db.get_value("Account", credit_account, "account_currency")
 				credit_exchange_rate = get_exchange_rate(currency, credit_account_currency)
 
-				doc.append_gl_entry(
+				append_gl_entry(doc,
 					gl_entries, debit_account, d.amount, 0, d.cost_center,
 					debit_exchange_rate, t_branch, debit_account_currency, remarks, credit_account
 				)
 
 				
-				doc.append_gl_entry(
+				append_gl_entry(doc,
 					gl_entries, credit_account, 0, d.amount, d.cost_center,
 					credit_exchange_rate, s_branch, credit_account_currency, remarks, debit_account
 				)
