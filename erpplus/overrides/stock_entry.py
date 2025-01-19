@@ -33,7 +33,7 @@ class CustomStockEntry(StockEntry):
 
 def on_cancel_function(doc,method):
 	if doc.purpose == "Material Transfer":
-		doc.cancel_journal()
+		cancel_journal(doc)
 	#super().on_cancel()
 
 def cancel_journal(doc):
