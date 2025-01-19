@@ -71,13 +71,13 @@ def make_stock_branch_tranfert_jv_entry(doc):
 				debit_account_currency = frappe.db.get_value("Account", debit_account, "account_currency")
 				debit_exchange_rate = get_exchange_rate(currency, debit_account_currency)
 
-				doc.append_gl_entry(
+				append_gl_entry(doc,
 					gl_entries, credit_account, 0, d.amount, d.cost_center,
 					credit_exchange_rate, s_branch, credit_account_currency, remarks, debit_account
 				)
 
 				
-				doc.append_gl_entry(
+				append_gl_entry(doc,
 					gl_entries, debit_account, d.amount, 0, d.cost_center,
 					debit_exchange_rate, s_branch, debit_account_currency, remarks, credit_account
 				)
