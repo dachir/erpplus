@@ -1,27 +1,64 @@
 import frappe
+from erpnext.stock import get_warehouse_account_map AS get_account_map
 
-@frappe.whitelist()
-def get_provisions_from_gl(params=None):
-    conditions = []
-    
-    for key, value in params.items():
-        if key == "start_date":
-            conditions.append(f"posting_date >= '{frappe.db.escape(value)}'")
-        elif key == "end_date":
-            conditions.append(f"posting_date <= '{frappe.db.escape(value)}'")
-        else:
-            conditions.append(f"{d.fieldname} = '{frappe.db.escape(value)}'")
-            
-
-    conditions.append("credit > 0 AND to_be_paid = 1 AND remaining_amount > 0 AND is_cancelled = 0")
-
-    condition_str = " AND ".join(conditions)
-
-    query = f"""
-        SELECT account, credit AS amount, remaining_amount
-        FROM `tabGL Entry`
-        WHERE {condition_str}
+def apply_patch():
     """
+    Monkey‑patch erpnext.stock.get_warehouse_account so that:
+        1) We check Item Default.custom_default_inventory_account
+        2) Then Item Group Default.custom_default_inventory_account
+        3) Otherwise fall back to the original ERPNext logic
+    """
+    # keep original
+    _orig = erpnext.stock.get_warehouse_account
 
-    return frappe.db.sql(query, as_dict=1)
-    
+    def get_warehouse_account(item_code, account_type, company=None):
+        # 1) item-level default
+        account = frappe.db.get_value(
+            "Item Default",
+            { "parent": item_code, "company": company },
+            "custom_default_inventory_account"
+        )
+
+        # 2) group-level default if none on item
+        if not account:
+            item_group = frappe.db.get_value("Item", item_code, "item_group")
+            account = frappe.db.get_value(
+                "Item Group Default",
+                { "parent": item_group, "company": company },
+                "custom_default_inventory_account"
+            )
+
+        # 3) fallback to original
+        if not account:
+            return _orig(item_code, account_type, company)
+        return account
+
+    # apply it globally
+    erpnext.stock.get_warehouse_account = get_warehouse_account
+
+
+#@frappe.whitelist()
+#def get_provisions_from_gl(params=None):
+#    conditions = []
+
+#    for key, value in params.items():
+#        if key == "start_date":
+#            conditions.append(f"posting_date >= '{frappe.db.escape(value)}'")
+#        elif key == "end_date":
+#            conditions.append(f"posting_date <= '{frappe.db.escape(value)}'")
+#        else:
+#            conditions.append(f"{d.fieldname} = '{frappe.db.escape(value)}'")
+        
+
+#    conditions.append("credit > 0 AND to_be_paid = 1 AND remaining_amount > 0 AND is_cancelled = 0")
+
+#    condition_str = " AND ".join(conditions)
+
+#    query = f"""
+#        SELECT account, credit AS amount, remaining_amount
+#        FROM `tabGL Entry`
+#        WHERE {condition_str}
+#    """
+
+#    return frappe.db.sql(query, as_dict=1)
+
